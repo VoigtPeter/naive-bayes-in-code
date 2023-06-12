@@ -2,11 +2,16 @@ from math import pi, exp, sqrt
 
 
 class NaiveBayesClassifier:
-
-    def __init__(self):
-        pass
+    """
+    """
+    def __init__(self, laplace=1.0):
+        """
+        """
+        self.laplace = laplace
 
     def fit(self, X, y):
+        """
+        """
         # get distinct classes
         distinct_classes = set(y)
         record_count = len(y)
@@ -51,14 +56,16 @@ class NaiveBayesClassifier:
                     if not self.attribute_info[i]['vals'].get(v):
                         self.attribute_info[i]['vals'][v] = dict()
                     if self.attribute_info[i]['vals'][v].get(c, None) is None:
-                        self.attribute_info[i]['vals'][v][c] = 0 # addition of 1 (Laplace correction)
+                        self.attribute_info[i]['vals'][v][c] = self.laplace
                     self.attribute_info[i]['vals'][v][c] += 1
                 for v in self.attribute_info[i]['vals']:
                     for c in self.attribute_info[i]['vals'][v]:
-                        self.attribute_info[i]['vals'][v][c] /= (self.class_info[c]['c'] )#+ len(distinct_classes)) # Laplace
+                        self.attribute_info[i]['vals'][v][c] /= (self.class_info[c]['c'] + (self.laplace * len(distinct_classes)))
         return self
 
     def predict_proba(self, X):
+        """
+        """
         res = dict()
         for c in self.class_info:
             p_C = self.class_info[c]['p']
@@ -82,5 +89,14 @@ class NaiveBayesClassifier:
         return res
 
     def predict(self, X):
-        proba = self.predict_proba(X)
-        return max(proba, key=proba.get)
+        """
+        """
+        if isinstance(X[0], list):
+            res = []
+            for item in X:
+                proba = self.predict_proba(item)
+                res.append(max(proba, key=proba.get))
+            return res
+        else:
+            proba = self.predict_proba(X)
+            return max(proba, key=proba.get)
